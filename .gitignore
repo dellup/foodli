@@ -1,0 +1,41 @@
+# Общая блокаировка
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+*.swo
+.env
+.env.*
+
+# Frontend
+frontend/node_modules/
+frontend/.output/
+frontend/.nuxt/
+frontend/.vercel/
+frontend/.cache/
+frontend/.npm/
+
+# Все, что связано с редактором
+frontend/.idea/
+frontend/.vscode/
+
+# backend
+backend/target/
+backend/.idea/
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.vscode/
+
+backend/mvnw.cmd
+backend/mvnw
+backend/.mvn/
+
+**/.docker/
+docker-compose.override.yml
+
+*.orig
+*.rej
+
+.github/workflows/*.secrets
