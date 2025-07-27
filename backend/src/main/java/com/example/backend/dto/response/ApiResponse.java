@@ -1,28 +1,43 @@
 package com.example.backend.dto.response;
 
+import com.example.backend.dto.request.ApiRequest;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Data
 @Accessors(chain = true)
-public class ApiResponse<T> {
-    private T result;
-    private Integer total;
-    private Integer nextOffset;
-    private Integer limit;
-    private Integer offset;
-    private List<ApiError> errors;
+public class ApiResponse {
+    public static SuccessResponse success(Map<String, Object> result) {
+        var response = new SuccessResponse();
+        Optional.ofNullable(result.get("result"))
+                .map(resultValue -> (List<Optional<?>>) resultValue)
+                .ifPresent(response::setResult);
 
-    public static <T> ApiResponse<T> success(T result) {
-        ApiResponse<T> response = new ApiResponse<>();
-        response.setResult(result);
+        Optional.ofNullable(result.get("limit"))
+                .map(limit -> (Integer) limit)
+                .ifPresent(response::setLimit);
+
+        Optional.ofNullable(result.get("offset"))
+                .map(offset -> (Integer) offset)
+                .ifPresent(response::setOffset);
+
+        Optional.ofNullable(result.get("nextOffset"))
+                .map(nextOffset -> (Integer) nextOffset)
+                .ifPresent(response::setNextOffset);
+
+        Optional.ofNullable(result.get("total"))
+                .map(total -> (Integer) total)
+                .ifPresent(response::setTotal);
+
         return response;
     }
 
-    public static <T> ApiResponse<T> error(List<ApiError> errors) {
-        ApiResponse<T> response = new ApiResponse<>();
+    public static ErrorResponse error(List<ApiError> errors) {
+        var response = new ErrorResponse();
         response.setErrors(errors);
         return response;
     }
