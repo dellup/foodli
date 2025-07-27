@@ -1,12 +1,13 @@
 package com.example.backend.dto.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.List;
+import java.util.Optional;
+
 @Data
-@AllArgsConstructor
-public class SuccessResponse<T> {
-    private T result;
+public class SuccessResponse {
+    private List<Optional<?>> result;
     private Integer total;
     private Integer nextOffset;
     private Integer limit;
