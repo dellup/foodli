@@ -10,6 +10,5 @@ public class HelloController {
     public Map<String, String> hello() {
         return Map.of("message", "Привет из Spring!");
 //
-//
     }
 }
