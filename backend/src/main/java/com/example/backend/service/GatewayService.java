@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.ApiRequest;
 import com.example.backend.exceptions.GatewayException;
+import com.example.backend.uttils.Log;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class GatewayService {
      *  И необязательными offset, limit, total, nextOffset
      */
     public static Map<String, Object> call(ApiRequest request) {
+        new Log().info("Передача запроса в GatewayService");
         var oper = request.getOperation();
         var methodName = request.getMethodName();
         var serviceName = request.getServiceName();
@@ -33,8 +35,14 @@ public class GatewayService {
         String className = String.format("com.example.backend.service.%s.%s.%s",
                 serviceName, methodName, oper);
         if (request.getParams() == null) {
-            throw new GatewayException("NULL_PARAMS", "Parameters should not be null", null);
+ 
+            // Логирование исключения
+            GatewayException gatewayException = new GatewayException("NULL_PARAMS", "Parameters should not be null", null);
+            new Log().error(gatewayException.getMessage(), gatewayException);
+
+            throw gatewayException;
         }
+
         try {
             // Получение пути к классу
             className = getMethodClass(oper.getOperation(), serviceName, methodName);
@@ -42,7 +50,12 @@ public class GatewayService {
 
             // Проверка типа класса
             if (!AbstractMethod.class.isAssignableFrom(clazz)) {
-                throw new GatewayException("INVALID_CLASS_TYPE", "Class " + className + " does not extend AbstractMethod", null);
+
+                // Логирование исключения
+                GatewayException gatewayException = new GatewayException("INVALID_CLASS_TYPE", "Class " + className + " does not extend AbstractMethod", null);
+                new Log().error(gatewayException.getMessage(), gatewayException);
+
+                throw gatewayException;
             }
 
             // Создание экземпляра класса
@@ -51,10 +64,13 @@ public class GatewayService {
             List<Optional<?>> result = instance.call();
 
             List<?> resultList = result.stream()
-                    .map(optional -> optional.orElseThrow(() ->
-                            new GatewayException("CALL_FAILED", "Object value is empty", null)))
+                    .map(optional -> optional.orElseThrow(() -> {
+                        // Логирование исключения
+                        GatewayException gatewayException = new GatewayException("CALL_FAILED", "Object value is empty", null);
+                        new Log().error(gatewayException.getMessage(), gatewayException);
+                        return gatewayException;
+                    }))
                     .toList();
-
             int total = resultList.size();
 
             // Обработка пагинации
@@ -91,11 +107,27 @@ public class GatewayService {
             return response;
 
         } catch (ClassNotFoundException e) {
-            throw new GatewayException("CLASS_NOT_FOUND", "Class not found: " + className, e);
+
+            // Логирование исключения
+            GatewayException gatewayException = new GatewayException("CLASS_NOT_FOUND", "Class not found: " + className, e);
+            new Log().error(gatewayException.getMessage(), gatewayException);
+
+            throw gatewayException;
+
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new GatewayException("INSTANCE_CREATION_FAILED", "Failed to instantiate class: " + className, e);
+
+            // Логирование исключения
+            GatewayException gatewayException = new GatewayException("INSTANCE_CREATION_FAILED", "Failed to instantiate class: " + className, e);
+            new Log().error(gatewayException.getMessage(), gatewayException);
+
+            throw gatewayException;
         } catch (Exception e) {
-            throw new GatewayException("ERROR_CREATING_INSTANCE", "Failed to create class instance for " + className, e);
+
+            // Логирование исключения
+            GatewayException gatewayException = new GatewayException("ERROR_CREATING_INSTANCE", "Failed to create class instance for " + className, e);
+            new Log().error(gatewayException.getMessage(), gatewayException);
+
+            throw gatewayException;
         }
 
     }
@@ -110,7 +142,12 @@ public class GatewayService {
      */
     private static String getMethodClass(String oper, String serviceName, String methodName) {
         if (!oper.equals("add") && !oper.equals("get") && !oper.equals("edit") && !oper.equals("del")) {
-            throw new GatewayException("UNKNOWN_OPERATION_TYPE", "Operation " + oper + " is unknown", null);
+
+            // Логирование исключения
+            GatewayException gatewayException = new GatewayException("UNKNOWN_OPERATION_TYPE", "Operation " + oper + " is unknown", null);
+            new Log().error(gatewayException.getMessage(), gatewayException);
+
+            throw gatewayException;
         }
         StringBuilder classPath = new StringBuilder();
         classPath.append("com.example.backend.");
@@ -121,7 +158,12 @@ public class GatewayService {
         if (isClassExists(classPath.toString())) {
             return classPath.toString();
         } else {
-            throw new GatewayException("UNKNOWN_METHOD_NAME", "Method path " + classPath.toString() + " is wrong", null);
+
+            // Логирование исключения
+            GatewayException gatewayException = new GatewayException("UNKNOWN_METHOD_NAME", "Method path " + classPath.toString() + " is wrong", null);
+            new Log().error(gatewayException.getMessage(), gatewayException);
+
+            throw gatewayException;
         }
     }
 
@@ -133,7 +175,10 @@ public class GatewayService {
             Class.forName(className);
             return true;
         } catch (ClassNotFoundException e) {
-            // TODO: Залогировать ошибку
+
+            // Логирование исключения
+            new Log().error("Заданный метод не найден", e);
+
             return false;
         }
     }
@@ -143,6 +188,10 @@ public class GatewayService {
         try {
             return objectMapper.readValue(objectMapper.writeValueAsString(obj), Map.class);
         } catch (JsonProcessingException e) {
+
+            // Логирование исключения
+            new Log().error("Ошибка создания Json", e);
+
             return new HashMap<>();
         }
     }
