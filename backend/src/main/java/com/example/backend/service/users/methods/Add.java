@@ -11,10 +11,5 @@ public class Add extends AbstractMethod {
     public Add() {}
     @Override
     protected List<Optional<?>> exec() {
-        var user1 = Optional.of(new User());
-        user1.get().setUsername("admin");
-        var user2 = Optional.of(new User());
-        user2.get().setUsername("gfds");
-        return new ArrayList<>(List.of(user1, user2));
     }
 }
