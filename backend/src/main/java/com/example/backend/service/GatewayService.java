@@ -27,11 +27,26 @@ public class GatewayService {
         var oper = request.getOperation();
         var methodName = request.getMethodName();
         var serviceName = request.getServiceName();
-        var limit = request.getSelectorParams().get("limit");
-        var offset = request.getSelectorParams().get("offset");
+        Map<String, Object> selectorParams = request.getSelectorParams();
+        Integer limit = null;
+        Integer offset = null;
+
+        if (selectorParams != null) {
+            limit = parseNumber(selectorParams.get("limit"), "limit");
+            offset = parseNumber(selectorParams.get("offset"), "offset");
+        }
+
+        // Далее работаем как обычно
+        if (limit != null && limit <= 0) {
+            throw new GatewayException("INVALID_LIMIT", "Limit must be positive", null);
+        }
+        if (offset != null && offset < 0) {
+            throw new GatewayException("INVALID_OFFSET", "Offset must be non-negative", null);
+        }
+
 
         String className = String.format("com.example.backend.service.%s.%s.%s",
-                serviceName, methodName, oper);
+                serviceName, methodName, oper.getOperation());
         if (request.getParams() == null) {
             throw new GatewayException("NULL_PARAMS", "Parameters should not be null", null);
         }
@@ -160,5 +175,23 @@ public class GatewayService {
             return offsetInt + limitInt;
         }
         return -1;  // Возвращаем -1, если это последняя страница
+    }
+
+    private static Integer parseNumber(Object value, String paramName) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        try {
+            return Integer.parseInt(value.toString());
+        } catch (NumberFormatException e) {
+            throw new GatewayException(
+                    "INVALID_" + paramName.toUpperCase(),
+                    paramName + " must be a number or null",
+                    e
+            );
+        }
     }
 }

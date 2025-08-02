@@ -1,6 +1,7 @@
 package com.example.backend.service.types;
 
 import com.example.backend.exceptions.GatewayException;
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum OperationType {
     ADD("add"),
@@ -18,6 +19,7 @@ public enum OperationType {
         return operation;
     }
 
+    @JsonCreator
     public static OperationType fromString(String operation) {
         for (OperationType op : OperationType.values()) {
             if (op.getOperation().equalsIgnoreCase(operation)) {
