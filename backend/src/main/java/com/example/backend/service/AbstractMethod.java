@@ -1,5 +1,7 @@
 package com.example.backend.service;
 
+import com.example.backend.uttils.Log;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,8 +29,14 @@ public abstract class AbstractMethod {
      */
 
     public List<Optional<?>> call() {
+        new Log().info("Вызов метода call");
         if (isCalled) {
-            throw new IllegalStateException("Метод был уже вызван. Создайте копию объекта для повторного вызова.");
+            IllegalStateException e = new IllegalStateException("Метод был уже вызван. Создайте копию объекта для повторного вызова.");
+
+            // Логирование исключения
+            new Log().error(e.getMessage(), e);
+
+            throw e;
         }
         isCalled = true;
 

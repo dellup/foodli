@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <Property name="LOG_DIR">logs</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- 1. Консольный вывод (для разработки) -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <!-- 2. Основной лог-файл (все сообщения DEBUG+) -->
+        <RollingFile name="AppLog"
+                     fileName="${LOG_DIR}/app.log"
+                     filePattern="${LOG_DIR}/app-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/> <!-- Ротация по дням -->
+            </Policies>
+        </RollingFile>
+
+        <!-- 3. Лог ошибок (только ERROR и FATAL) -->
+        <RollingFile name="ErrorLog"
+                     fileName="${LOG_DIR}/errors.log"
+                     filePattern="${LOG_DIR}/errors-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- Кастомный уровень лог для spring -->
+        <Logger name="org.springframework" level="info"/>
+
+        <!-- Логи приложения (DEBUG+) -->
+        <Logger name="com.yourpackage" level="debug" additivity="false">
+            <AppenderRef ref="AppLog"/>
+            <AppenderRef ref="ErrorLog"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- Корневой логгер (для всех остальных библиотек) -->
+        <Root level="debug">
+            <AppenderRef ref="AppLog"/>
+            <AppenderRef ref="ErrorLog"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
