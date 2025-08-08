@@ -18,7 +18,7 @@ import static org.springframework.util.StringUtils.capitalize;
 public class GatewayService {
 
     /**
-     * Метед вызывает call() у API метода, переданного в request с параметрами params внутри request
+     * Метод вызывает call() у API метода, переданного в request с параметрами params внутри request
      * @param request - Параметры запроса
      * @return - Возвращает мапу(JSON) с обязательным result
      *  И необязательными offset, limit, total, nextOffset
