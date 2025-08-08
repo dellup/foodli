@@ -13,4 +13,5 @@ public class ApiRequest {
     private Map<String, Object> params;
     // Тут будут храниться offset, limit и прочее
     private Map<String, Object> selectorParams;
+//
 }
