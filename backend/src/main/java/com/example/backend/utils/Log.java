@@ -1,4 +1,4 @@
-package com.example.backend.uttils;
+package com.example.backend.utils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
