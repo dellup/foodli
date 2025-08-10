@@ -1,6 +1,6 @@
 package com.example.backend.service;
 
-import com.example.backend.uttils.Log;
+import com.example.backend.utils.Log;
 
 import java.util.List;
 import java.util.Map;
@@ -28,7 +28,7 @@ public abstract class AbstractMethod {
      * Запросить выполнение API функции
      */
 
-    public List<Optional<?>> call() {
+    public List<Optional<?>> call(Map<String, Object> params) {
         new Log().info("Вызов метода call");
         if (isCalled) {
             IllegalStateException e = new IllegalStateException("Метод был уже вызван. Создайте копию объекта для повторного вызова.");
@@ -40,8 +40,8 @@ public abstract class AbstractMethod {
         }
         isCalled = true;
 
-        return exec();
+        return exec(params);
     }
 
-    protected abstract List<Optional<?>> exec();
+    protected abstract List<Optional<?>> exec(Map<String, Object> params);
 }
