@@ -1,34 +1,42 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.request.ApiRequest;
-import com.example.backend.exceptions.GatewayException;
-import com.example.backend.uttils.Log;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.backend.dto.response.ApiResponse;
+import com.example.backend.utils.Log;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.springframework.util.StringUtils.capitalize;
+import static com.example.backend.exceptions.GatewayException.createAndLogGatewayException;
 
 
 @Service
+@RequiredArgsConstructor
 public class GatewayService {
+    private final Map<String, MethodFactory> methodFactoryMap;
 
     /**
      * Метод вызывает call() у API метода, переданного в request с параметрами params внутри request
      * @param request - Параметры запроса
-     * @return - Возвращает мапу(JSON) с обязательным result
-     *  И необязательными offset, limit, total, nextOffset
+     * @return - Возвращает ApiResponse
      */
-    public static Map<String, Object> call(ApiRequest request) {
+    public ApiResponse call(ApiRequest request) {
         new Log().info("Передача запроса в GatewayService");
-        var oper = request.getOperation();
+        var operation = request.getOperation();
         var methodName = request.getMethodName();
         var serviceName = request.getServiceName();
+        var params = request.getParams();
+        // Получаем нужную фабрику для сервиса из контекста
+        MethodFactory methodFactory = methodFactoryMap.get(serviceName);
+        if (methodFactory == null) {
+            throw createAndLogGatewayException("SERVICE_NOT_FOUND", "Service '%s' not found".formatted(serviceName), null);
+        }
+
+        AbstractMethod method = methodFactory.createMethod(operation);
+
         Map<String, Object> selectorParams = request.getSelectorParams();
         Integer limit = null;
         Integer offset = null;
@@ -40,175 +48,63 @@ public class GatewayService {
 
         // Далее работаем как обычно
         if (limit != null && limit <= 0) {
-            throw new GatewayException("INVALID_LIMIT", "Limit must be positive", null);
+            throw createAndLogGatewayException("INVALID_LIMIT", "Limit must be positive", null);
         }
         if (offset != null && offset < 0) {
-            throw new GatewayException("INVALID_OFFSET", "Offset must be non-negative", null);
+            throw createAndLogGatewayException("INVALID_OFFSET", "OFFSET must be positive", null);
         }
 
-
-        String className = String.format("com.example.backend.service.%s.%s.%s",
-                serviceName, methodName, oper.getOperation());
         if (request.getParams() == null) {
- 
-            // Логирование исключения
-            GatewayException gatewayException = new GatewayException("NULL_PARAMS", "Parameters should not be null", null);
-            new Log().error(gatewayException.getMessage(), gatewayException);
-
-            throw gatewayException;
+            throw createAndLogGatewayException("NULL_PARAMS", "Parameters should not be null", null);
         }
 
         try {
-            // Получение пути к классу
-            className = getMethodClass(oper.getOperation(), serviceName, methodName);
-            Class<?> clazz = Class.forName(className);
+            var response = new ApiResponse();
 
-            // Проверка типа класса
-            if (!AbstractMethod.class.isAssignableFrom(clazz)) {
-
-                // Логирование исключения
-                GatewayException gatewayException = new GatewayException("INVALID_CLASS_TYPE", "Class " + className + " does not extend AbstractMethod", null);
-                new Log().error(gatewayException.getMessage(), gatewayException);
-
-                throw gatewayException;
-            }
-
-            // Создание экземпляра класса
-            AbstractMethod instance = (AbstractMethod) clazz.getDeclaredConstructor().newInstance();
-
-            List<Optional<?>> result = instance.call();
-
-            List<?> resultList = result.stream()
-                    .map(optional -> optional.orElseThrow(() -> {
-                        // Логирование исключения
-                        GatewayException gatewayException = new GatewayException("CALL_FAILED", "Object value is empty", null);
-                        new Log().error(gatewayException.getMessage(), gatewayException);
-                        return gatewayException;
-                    }))
-                    .toList();
-            int total = resultList.size();
+            // TODO: Пагинацию нужно добавить внутрь call и делать запросы к БД используя пагинацию
+            List<Optional<?>> result = method.call(params);
+            int total = result.size();
 
             // Обработка пагинации
             if (limit != null && offset != null) {
                 int offsetInt = Integer.parseInt(offset.toString());
                 int limitInt = Integer.parseInt(limit.toString());
-                int toIndex = Math.min(offsetInt + limitInt, resultList.size());
+                int toIndex = Math.min(offsetInt + limitInt, result.size());
 
                 // Если offset выходит за пределы списка, возвращаем пустой результат
-                if (offsetInt >= resultList.size()) {
-                    return new HashMap<>();
+                if (offsetInt >= result.size()) {
+                    throw createAndLogGatewayException("OFFSET_IS_OUT_OF_BOUNDS",
+                            "Offset '%d' is out of bounds".formatted(offsetInt),
+                            null);
                 }
 
-                resultList = resultList.subList(offsetInt, toIndex);
+                result = result.subList(offsetInt, toIndex);
             }
 
             // Формируем ответ с мета-данными
-            var nextOffset = getNextOffset(resultList, limit, offset, total);
-            Map<String, Object> response = convertToJson(resultList);
+            var nextOffset = getNextOffset(result, limit, offset, total);
+            response.setResult(result);
             if (total > 0) {
-                response.put("total", total);
+                response.setTotal(total);
             }
             if (limit != null) {
-                response.put("limit", limit);
+                response.setLimit(limit);
             }
             if (offset != null) {
-                response.put("offset", offset);
+                response.setOffset(offset);
             }
 
             if (nextOffset != -1) {
-                response.put("nextOffset", nextOffset);
+                response.setNextOffset(nextOffset);
             }
 
             return response;
 
-        } catch (ClassNotFoundException e) {
-
-            // Логирование исключения
-            GatewayException gatewayException = new GatewayException("CLASS_NOT_FOUND", "Class not found: " + className, e);
-            new Log().error(gatewayException.getMessage(), gatewayException);
-
-            throw gatewayException;
-
-        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-
-            // Логирование исключения
-            GatewayException gatewayException = new GatewayException("INSTANCE_CREATION_FAILED", "Failed to instantiate class: " + className, e);
-            new Log().error(gatewayException.getMessage(), gatewayException);
-
-            throw gatewayException;
         } catch (Exception e) {
-
-            // Логирование исключения
-            GatewayException gatewayException = new GatewayException("ERROR_CREATING_INSTANCE", "Failed to create class instance for " + className, e);
-            new Log().error(gatewayException.getMessage(), gatewayException);
-
-            throw gatewayException;
+            throw createAndLogGatewayException("ERROR_CREATING_INSTANCE",
+                    "Failed to create class instance for %s".formatted(method.getClass().getName()), e);
         }
 
-    }
-
-    /**
-     * Метод получает полный путь нужного класса по параметрам запроса
-     * @param oper - Операция
-     * @param serviceName - Имя сервиса
-     * @param methodName - Имя метода
-     * @return - Выводит полный путь к методу нужного сервиса.
-     * Если такого метода не существует, то выводит ошибку.
-     */
-    private static String getMethodClass(String oper, String serviceName, String methodName) {
-        if (!oper.equals("add") && !oper.equals("get") && !oper.equals("edit") && !oper.equals("del")) {
-
-            // Логирование исключения
-            GatewayException gatewayException = new GatewayException("UNKNOWN_OPERATION_TYPE", "Operation " + oper + " is unknown", null);
-            new Log().error(gatewayException.getMessage(), gatewayException);
-
-            throw gatewayException;
-        }
-        StringBuilder classPath = new StringBuilder();
-        classPath.append("com.example.backend.");
-        classPath.append("service.");
-        classPath.append(serviceName).append(".");
-        classPath.append(methodName).append(".");
-        classPath.append(capitalize(oper));
-        if (isClassExists(classPath.toString())) {
-            return classPath.toString();
-        } else {
-
-            // Логирование исключения
-            GatewayException gatewayException = new GatewayException("UNKNOWN_METHOD_NAME", "Method path " + classPath.toString() + " is wrong", null);
-            new Log().error(gatewayException.getMessage(), gatewayException);
-
-            throw gatewayException;
-        }
-    }
-
-    public static boolean isClassExists(String className) {
-        if (className == null || className.trim().isEmpty()) {
-            return false;
-        }
-        try {
-            Class.forName(className);
-            return true;
-        } catch (ClassNotFoundException e) {
-
-            // Логирование исключения
-            new Log().error("Заданный метод не найден", e);
-
-            return false;
-        }
-    }
-
-    private static Map<String, Object> convertToJson(Object obj) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.readValue(objectMapper.writeValueAsString(obj), Map.class);
-        } catch (JsonProcessingException e) {
-
-            // Логирование исключения
-            new Log().error("Ошибка создания Json", e);
-
-            return new HashMap<>();
-        }
     }
 
     private static int getNextOffset(List<?> resultList, Object limit, Object offset, int total) {
@@ -236,11 +132,9 @@ public class GatewayService {
         try {
             return Integer.parseInt(value.toString());
         } catch (NumberFormatException e) {
-            throw new GatewayException(
-                    "INVALID_" + paramName.toUpperCase(),
+            throw createAndLogGatewayException("INVALID_" + paramName.toUpperCase(),
                     paramName + " must be a number or null",
-                    e
-            );
+                    e);
         }
     }
 }
