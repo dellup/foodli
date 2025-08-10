@@ -10,15 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 @Scope("prototype")
-public class Get extends AbstractMethod {
+public class Edit extends AbstractMethod {
     private final UserRepository userRepository;
 
     @Override
     protected List<Optional<?>> exec(Map<String, Object> params) {
-        Integer id = (Integer) params.get("id");
-        return List.of(Optional.of(userRepository.findById(id.longValue())));
+        var user = userRepository.findById(((Integer) params.get("id")).longValue());
+        user.get().setUsername(params.get("username").toString());
+        return List.of(user);
     }
 }
