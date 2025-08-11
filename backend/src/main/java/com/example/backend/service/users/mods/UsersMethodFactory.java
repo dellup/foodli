@@ -19,6 +19,7 @@ public class UsersMethodFactory implements MethodFactory {
     @Override
     public AbstractMethod createMethod(OperationType operation) {
         return switch (operation) {
+            // todo: упростить и выенсти в gateaway сервис
             case GET -> context.getBean(Get.class);
             case ADD -> context.getBean(Add.class);
             case EDIT -> context.getBean(Edit.class);

@@ -16,10 +16,12 @@ import java.util.Optional;
 public class Edit extends AbstractMethod {
     private final UserRepository userRepository;
 
+    // public int id;
+    // todo: посмотреть, можно ли вынести params в паарметры класса. Прмиер выше. Избавится от параметров в exec
     @Override
     protected List<Optional<?>> exec(Map<String, Object> params) {
-        var user = userRepository.findById(((Integer) params.get("id")).longValue());
-        user.get().setUsername(params.get("username").toString());
+        var user = userRepository.findById(((Integer) params.get('id')).longValue());
+        user.get().setUsername(username.toString());
         return List.of(user);
     }
 }
