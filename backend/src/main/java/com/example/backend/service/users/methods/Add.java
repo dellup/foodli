@@ -17,6 +17,11 @@ import java.util.Optional;
 public class Add extends AbstractMethod {
     private final UserRepository userRepository;
 
+    // todo не фильтровать
+    // public List SANITIZE_BY_NAME = [
+    //     'username': false
+    // ]
+
     @Override
     protected List<Optional<?>> exec(Map<String, Object> params) {
         var username = String.valueOf(params.get("username"));
