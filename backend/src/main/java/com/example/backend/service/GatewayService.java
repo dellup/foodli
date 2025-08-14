@@ -38,8 +38,11 @@ public class GatewayService {
         AbstractMethod method = methodFactory.createMethod(operation);
 
         Map<String, Object> selectorParams = request.getSelectorParams();
+
+        // todo вынести в abstactGet
         Integer limit = null;
         Integer offset = null;
+        // List filters = [['id', 'NOT_EQals', [1]], ['username', 'LIKE', ['%mario%']]]
 
         if (selectorParams != null) {
             limit = parseNumber(selectorParams.get("limit"), "limit");

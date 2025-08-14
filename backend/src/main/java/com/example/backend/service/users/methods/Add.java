@@ -16,6 +16,13 @@ import java.util.Optional;
 @Scope("prototype")
 public class Add extends AbstractMethod {
     private final UserRepository userRepository;
+    
+    // public String username;
+
+    // // todo не фильтровать
+    // public List SANITIZE_BY_NAME = [
+    //     'username': false
+    // ];
 
     @Override
     protected List<Optional<?>> exec(Map<String, Object> params) {

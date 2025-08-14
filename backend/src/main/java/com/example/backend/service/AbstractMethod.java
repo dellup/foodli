@@ -18,6 +18,9 @@ public abstract class AbstractMethod {
             "example_prop_name", false
     );
 
+
+    // <> "" / '' <sci[t]
+
     /**
      * Метод уже был вызван
      */
@@ -39,6 +42,7 @@ public abstract class AbstractMethod {
             throw e;
         }
         isCalled = true;
+        
 
         return exec(params);
     }
