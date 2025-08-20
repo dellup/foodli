@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -17,16 +16,10 @@ import java.util.Optional;
 public class Add extends AbstractMethod {
     private final UserRepository userRepository;
     
-    // public String username;
-
-    // // todo не фильтровать
-    // public List SANITIZE_BY_NAME = [
-    //     'username': false
-    // ];
+    public String username;
 
     @Override
-    protected List<Optional<?>> exec(Map<String, Object> params) {
-        var username = String.valueOf(params.get("username"));
+    protected List<Optional<?>> exec() {
         var user = new User();
         user.setUsername(username);
         userRepository.save(user);

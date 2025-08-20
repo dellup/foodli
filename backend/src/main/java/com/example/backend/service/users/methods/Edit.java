@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -15,13 +14,13 @@ import java.util.Optional;
 @Scope("prototype")
 public class Edit extends AbstractMethod {
     private final UserRepository userRepository;
+    private int id;
+    private String username;
 
-    // public int id;
-    // todo: посмотреть, можно ли вынести params в парметры класса. Прмиер выше. Избавится от параметров в exec. Либо придумать структуру описания типов паарметров и возвращаемых знчаений
     @Override
-    protected List<Optional<?>> exec(Map<String, Object> params) {
-        var user = userRepository.findById(((Integer) params.get('id')).longValue());
-        user.get().setUsername(username.toString());
+    protected List<Optional<?>> exec() {
+        var user = userRepository.findById((long) id);
+        user.get().setUsername(username);
         return List.of(user);
     }
 }
