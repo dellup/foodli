@@ -44,8 +44,8 @@ public class GatewayService {
 
         try {
             var response = new ApiResponse();
-
             List<Optional<?>> result = method.call(params, selectorParams);
+
             Integer total = result.size();
             response.setTotal(total);
             response.setResult(result);
