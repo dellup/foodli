@@ -19,5 +19,6 @@ public class GatewayException extends RuntimeException {
         new Log().error(gatewayException.getMessage(), gatewayException);
         return gatewayException;
     }
+
 }
 

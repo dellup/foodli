@@ -4,7 +4,7 @@ import com.example.backend.dto.request.ApiRequest;
 import com.example.backend.dto.response.ApiResponse;
 import com.example.backend.exceptions.GatewayException;
 import com.example.backend.service.utils.UniversalMethodFactory;
-import com.example.backend.utils.Log;
+import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +26,6 @@ public class GatewayService {
      * @return - Возвращает ApiResponse
      */
     public ApiResponse call(ApiRequest request) {
-        new Log().info("Передача запроса в GatewayService");
         var operation = request.getOperation();
         var methodName = request.getMethodName();
         var serviceName = request.getServiceName();
@@ -54,6 +53,9 @@ public class GatewayService {
 
         } catch (GatewayException e) {
             throw e;
+        }
+        catch (ValidationException e) {
+            throw createAndLogGatewayException("VALIDATION_ERROR", "Validation exception. Message: %s".formatted(e.getMessage()), e);
         }
         catch (Exception e) {
             throw createAndLogGatewayException("ERROR_CREATING_INSTANCE",

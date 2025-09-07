@@ -21,7 +21,6 @@ public class ApiGatewayController {
 
     @PostMapping("/gateway")
     public ResponseEntity<?> handleRequest(@RequestBody ApiRequest request) {
-        new Log().info("Начало обработки запроса в Gateway");
         try {
             var response = gatewayService.call(request);
 

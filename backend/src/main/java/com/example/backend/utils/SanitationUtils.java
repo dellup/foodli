@@ -1,6 +1,8 @@
 package com.example.backend.utils;
 
 import com.example.backend.service.AbstractMethod;
+import com.example.backend.service.users.auth.AuthService;
+import com.example.backend.service.users.auth.UserService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.web.util.HtmlUtils;
 
@@ -8,6 +10,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 
 import static com.example.backend.exceptions.GatewayException.createAndLogGatewayException;
 
@@ -27,7 +31,10 @@ public class SanitationUtils {
 
         for (Field field : fields) {
             field.setAccessible(true); // Даем доступ к приватным полям
-            if (JpaRepository.class.isAssignableFrom(field.getType())) { // Поля репозиториев не санитайзим
+            //todo: СДЕЛАТЬ ПО НОРМАЛЬНОМУ
+            if (JpaRepository.class.isAssignableFrom(field.getType()) ||
+                    AuthService.class.isAssignableFrom(field.getType()) ||
+                    UserService.class.isAssignableFrom(field.getType())) { // Поля репозиториев не санитайзим
                 continue;
             }
             try {
@@ -57,7 +64,9 @@ public class SanitationUtils {
             field.set(instance, sanitizedValue);
         } else if (value instanceof Collection) {
             Collection<?> collection = (Collection<?>) value;
-            Collection<Object> sanitizedCollection = new ArrayList<>();
+            Collection<Object> sanitizedCollection = collection instanceof List ?
+                    new ArrayList<>(collection) :
+                    new HashSet<>(collection);
             for (Object item : collection) {
                 if (item instanceof String) {
                     String sanitizedItem = HtmlUtils.htmlEscape(((String) item).trim());
