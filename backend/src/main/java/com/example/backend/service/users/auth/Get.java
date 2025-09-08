@@ -2,11 +2,11 @@ package com.example.backend.service.users.auth;
 
 import com.example.backend.dto.auth.JwtAuthenticationDto;
 import com.example.backend.dto.user.UserCredentialsDto;
-import com.example.backend.exceptions.AuthException;
 import com.example.backend.service.AbstractGet;
 import com.example.backend.service.PrototypeComponent;
 import com.example.backend.utils.Log;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -17,6 +17,8 @@ import javax.naming.AuthenticationException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+
+import static com.example.backend.exceptions.GatewayException.createAndLogGatewayException;
 
 @RequiredArgsConstructor
 @PrototypeComponent
@@ -56,10 +58,17 @@ public class Get extends AbstractGet {
             var tokenDto = new JwtAuthenticationDto();
             tokenDto.setToken(jwtAuthenticationDto.getToken());
             return List.of(Optional.of(tokenDto));
+        } catch (ConstraintViolationException e) {
+            // 2003 — ERROR_CODE_REQUEST_VALUE (некорректное значение поля)
+            String msg = e.getConstraintViolations().stream()
+                    .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                    .reduce((a,b) -> a + "; " + b)
+                    .orElse("Validation error");
+            throw createAndLogGatewayException("2003", msg, e);
+
         } catch (AuthenticationException e) {
-            var authException = new AuthException("Missing password or email");
-            new Log().error(authException.getMessage(), authException);
-            throw authException;
+            // 53 — ERROR_CODE_AUTH
+            throw createAndLogGatewayException("53", "Missing password or email", e);
         }
 
     }
