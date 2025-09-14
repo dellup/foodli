@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.model.role.Role;
 import com.example.backend.service.utils.auth.jwt.JwtAuthGuard;
 import com.example.backend.service.utils.auth.jwt.JwtAuthenticated;
@@ -9,7 +10,6 @@ import com.example.backend.utils.Log;
 import com.example.backend.utils.SanitationUtils;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -123,7 +123,7 @@ public abstract class AbstractMethod {
                         field.set(instance, params.get(fieldName));
                     }
                 } catch (IllegalAccessException e) {
-                    throw createAndLogGatewayException("REFLECTION_ERROR", "An error occurred when using reflection", e);
+                    throw createAndLogGatewayException(ErrorCode.INTERNAL, "An error occurred when using reflection", e);
                 }
             }
             // todo: потом сделаю нормально

@@ -1,5 +1,6 @@
 package com.example.backend.service.types;
 
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.exceptions.GatewayException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
@@ -26,6 +27,6 @@ public enum OperationType {
                 return op;
             }
         }
-        throw new GatewayException("INVALID_OPERATION_TYPE", "Invalid operation type: " + operation, null);
+        throw new GatewayException(ErrorCode.REQUEST_TYPE, "Invalid operation type: " + operation, null);
     }
 }

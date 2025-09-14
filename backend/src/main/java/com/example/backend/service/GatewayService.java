@@ -2,6 +2,7 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.ApiRequest;
 import com.example.backend.dto.response.ApiResponse;
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.exceptions.GatewayException;
 import com.example.backend.service.utils.UniversalMethodFactory;
 import jakarta.validation.ValidationException;
@@ -32,7 +33,7 @@ public class GatewayService {
         var params = request.getParams();
         AbstractMethod method = universalMethodFactory.createMethod(serviceName, methodName, operation);
         if (method == null) {
-            throw createAndLogGatewayException("SERVICE_NOT_FOUND", "Service '%s' not found".formatted(serviceName), null);
+            throw createAndLogGatewayException(ErrorCode.SERVICE_UNAVAILABLE, "Service '%s' not found".formatted(serviceName), null);
         }
 
         Map<String, Object> selectorParams = request.getSelectorParams();
@@ -55,10 +56,10 @@ public class GatewayService {
             throw e;
         }
         catch (ValidationException e) {
-            throw createAndLogGatewayException("VALIDATION_ERROR", "Validation exception. Message: %s".formatted(e.getMessage()), e);
+            throw createAndLogGatewayException(ErrorCode.REQUEST_VALUE, "Validation exception. Message: %s".formatted(e.getMessage()), e);
         }
         catch (Exception e) {
-            throw createAndLogGatewayException("ERROR_CREATING_INSTANCE",
+            throw createAndLogGatewayException(ErrorCode.INTERNAL_SERVER_ERROR,
                     "Failed to create class instance for %s".formatted(method.getClass().getName()), e);
         }
 

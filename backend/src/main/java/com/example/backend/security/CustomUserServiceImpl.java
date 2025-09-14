@@ -1,5 +1,6 @@
 package com.example.backend.security;
 
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,7 +16,7 @@ public class CustomUserServiceImpl implements UserDetailsService {
     @Override
     public CustomUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username).map(CustomUserDetails::new)
-                .orElseThrow(() -> createAndLogGatewayException("USERNAME_NOT_FOUND",
+                .orElseThrow(() -> createAndLogGatewayException(ErrorCode.REQUEST_DATA,
                         "Username aren't found during authentication", new UsernameNotFoundException(username)));
     }
 }

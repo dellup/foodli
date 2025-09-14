@@ -2,6 +2,7 @@ package com.example.backend.service.users.auth;
 
 import com.example.backend.dto.auth.JwtAuthenticationDto;
 import com.example.backend.dto.user.UserCredentialsDto;
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.service.AbstractGet;
 import com.example.backend.service.PrototypeComponent;
 import com.example.backend.utils.Log;
@@ -64,11 +65,11 @@ public class Get extends AbstractGet {
                     .map(v -> v.getPropertyPath() + ": " + v.getMessage())
                     .reduce((a,b) -> a + "; " + b)
                     .orElse("Validation error");
-            throw createAndLogGatewayException("2003", msg, e);
+            throw createAndLogGatewayException(ErrorCode.REQUEST_VALUE, msg, e);
 
         } catch (AuthenticationException e) {
             // 53 — ERROR_CODE_AUTH
-            throw createAndLogGatewayException("53", "Missing password or email", e);
+            throw createAndLogGatewayException(ErrorCode.AUTH, "Missing password or email", e);
         }
 
     }

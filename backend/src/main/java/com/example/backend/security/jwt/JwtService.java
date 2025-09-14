@@ -1,6 +1,7 @@
 package com.example.backend.security.jwt;
 
 import com.example.backend.dto.auth.JwtAuthenticationDto;
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.model.role.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -50,11 +51,11 @@ public class JwtService {
 
         Date originalExp = claims.getExpiration();
         if (originalExp == null) {
-            throw createAndLogGatewayException("TOKEN_EXPIRED_EXCEPTION", "Refresh token has no exp", null);
+            throw createAndLogGatewayException(ErrorCode.REQUEST_VALUE, "Refresh token has no exp", null);
         }
         // 2) не продлеваем! — если exp уже прошёл, рефрешить нельзя
         if (originalExp.before(new Date())) {
-            throw createAndLogGatewayException("TOKEN_EXPIRED_EXCEPTION", "Refresh token expired", null);
+            throw createAndLogGatewayException(ErrorCode.AUTH, "Refresh token expired", null);
         }
 
         // 3) выдаём новый access и НОВЫЙ refresh с тем же exp
@@ -82,15 +83,15 @@ public class JwtService {
                     .getPayload();
             return true;
         } catch (ExpiredJwtException e){
-            throw createAndLogGatewayException("EXPIRED_TOKEN", "Jwt token has expired", e);
+            throw createAndLogGatewayException(ErrorCode.AUTH, "Jwt token has expired", e);
         } catch (UnsupportedJwtException e){
-            throw createAndLogGatewayException("UNSUPPORTED_TOKEN", "Jwt token has unsupported", e);
+            throw createAndLogGatewayException(ErrorCode.AUTH, "Jwt token has unsupported", e);
         } catch (MalformedJwtException e){
-            throw createAndLogGatewayException("MALFORMED_TOKEN", "Jwt token has malformed", e);
+            throw createAndLogGatewayException(ErrorCode.REQUEST_VALUE, "Jwt token has malformed", e);
         } catch (SecurityException e){
-            throw createAndLogGatewayException("SECURITY_PROBLEM", "An security error occurred during token validation", e);
+            throw createAndLogGatewayException(ErrorCode.FORBIDDEN, "An security error occurred during token validation", e);
         } catch (Exception e){
-            throw createAndLogGatewayException("INVALID_TOKEN", "Jwt token is invalid", e);
+            throw createAndLogGatewayException(ErrorCode.AUTH, "Jwt token is invalid", e);
         }
     }
 
@@ -128,7 +129,7 @@ public class JwtService {
                 .parseSignedClaims(token).getPayload();
         Date exp = claims.getExpiration();
         long now = System.currentTimeMillis();
-        if (exp == null) throw createAndLogGatewayException("TOKEN_EXPIRED_EXCEPTION", "Refresh token has no exp", null);
+        if (exp == null) throw createAndLogGatewayException(ErrorCode.REQUEST_VALUE, "Refresh token has no exp", null);
         long ms = exp.getTime() - now;
         return Duration.ofMillis(Math.max(ms, 0));
     }

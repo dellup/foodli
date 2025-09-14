@@ -1,6 +1,7 @@
 package com.example.backend.service.utils.auth.jwt;
 
 import com.example.backend.dto.auth.JwtAuthenticationDto;
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.security.CustomUserDetails;
 import com.example.backend.security.CustomUserServiceImpl;
 import com.example.backend.security.jwt.JwtService;
@@ -67,7 +68,7 @@ public class JwtAuthGuard {
             }
         }
         // 3) нет access и не смогли освежить — запрет
-        throw createAndLogGatewayException("AUTH_EXCEPTION",
+        throw createAndLogGatewayException(ErrorCode.AUTH,
                 "Invalid or missing access/refresh token", null);
     }
 

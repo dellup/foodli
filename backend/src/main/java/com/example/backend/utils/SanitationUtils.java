@@ -1,5 +1,6 @@
 package com.example.backend.utils;
 
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.service.AbstractMethod;
 import com.example.backend.service.users.auth.AuthService;
 import com.example.backend.service.users.auth.UserService;
@@ -47,7 +48,7 @@ public class SanitationUtils {
                     sanitizeField(instance, field);
                 }
             } catch (IllegalAccessException e) {
-                throw createAndLogGatewayException("REFLECTION_ERROR", "An error occurred when using reflection", e);
+                throw createAndLogGatewayException(ErrorCode.INTERNAL, "An error occurred when using reflection", e);
             }
         }
     }

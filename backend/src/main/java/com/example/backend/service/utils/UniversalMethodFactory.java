@@ -1,5 +1,6 @@
 package com.example.backend.service.utils;
 
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.service.AbstractMethod;
 import com.example.backend.service.types.OperationType;
 import org.springframework.context.ApplicationContext;
@@ -29,11 +30,11 @@ public class UniversalMethodFactory implements MethodFactory {
             if (AbstractMethod.class.isAssignableFrom(methodClass)) {
                 return (AbstractMethod) context.getBean(methodClass);
             } else {
-                throw createAndLogGatewayException("SUBCLASS_ERROR",
+                throw createAndLogGatewayException(ErrorCode.INTERNAL,
                         "Class " + className + " is not a subclass of AbstractMethod", null);
             }
         } catch (ClassNotFoundException e) {
-            throw createAndLogGatewayException("ERROR_CREATING_INSTANCE",
+            throw createAndLogGatewayException(ErrorCode.INTERNAL,
                     "Failed to create class instance for %s".formatted(methodName), e);
         }
     }
