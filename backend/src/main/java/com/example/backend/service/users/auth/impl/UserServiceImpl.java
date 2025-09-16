@@ -1,6 +1,7 @@
 package com.example.backend.service.users.auth.impl;
 
 import com.example.backend.dto.user.UserDto;
+import com.example.backend.exceptions.ErrorCode;
 import com.example.backend.model.User;
 import com.example.backend.model.role.Role;
 import com.example.backend.repository.UserRepository;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+
+import static com.example.backend.exceptions.GatewayException.createAndLogGatewayException;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +37,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User addUser(UserDto userDto){
+        String email = userDto.getEmail();
+        if (userRepository.findByEmail(email).isPresent()){
+            throw createAndLogGatewayException(ErrorCode.REQUEST_DATA,
+                    String.format("User with email %s already exists", email), null);
+        }
         User user = new User();
         user.setEmail(userDto.getEmail());
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));
